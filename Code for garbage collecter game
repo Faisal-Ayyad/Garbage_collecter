@@ -1,0 +1,174 @@
+import pygame
+import random
+
+
+
+# Initialize Pygame
+pygame.init()
+
+
+
+# Set up the window display
+win_width = 1000
+win_height = 800
+win = pygame.display.set_mode((win_width, win_height))
+pygame.display.set_caption("Garbage collecter")
+screen = pygame.display.set_mode((1000, 800))
+screen_width, screen_height = 1000, 800
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+
+# Load the images
+player_img = pygame.image.load("img.png").convert_alpha()
+player_img_scaled = pygame.transform.scale(player_img, (30, 30))
+garbage_img = pygame.image.load("img_1.png").convert_alpha()
+garbage_img_scaled = pygame.transform.scale(garbage_img, (15, 15))
+enemy_img = pygame.image.load("img_2.png").convert_alpha()
+enemy_img_scaled = pygame.transform.scale(enemy_img, (30, 30))
+
+# Set up the player character
+player_img = pygame.image.load("img.png").convert_alpha()
+player_rect = player_img.get_rect(center=(win_width // 2, win_height // 2))
+player_scale = 0.1
+player_img = pygame.transform.scale(player_img, (int(player_rect.width * player_scale), int(player_rect.height * player_scale)))
+player_rect.size = player_img.get_size()
+player_speed = 3
+
+# Set up the enemy character
+enemy_img = pygame.image.load("img_2.png").convert_alpha()
+enemy_rect = enemy_img.get_rect(center=(win_width // 10, win_height // 10))
+enemy_scale = 0.1
+enemy_img = pygame.transform.scale(enemy_img, (int(enemy_rect.width * enemy_scale), int(enemy_rect.height * enemy_scale)))
+enemy_rect.size = enemy_img.get_size()
+enemy_speed = 1
+
+
+# Set up the garbage
+garbage_img = pygame.image.load("img_1.png").convert_alpha()
+garbage_list = []
+for i in range(50):
+    garbage_rect = garbage_img.get_rect(center=(random.randint(0, win_width), random.randint(0, win_height)))
+    garbage_scale = 0.05
+    garbage_img_scaled = pygame.transform.scale(garbage_img, (int(garbage_rect.width * garbage_scale), int(garbage_rect.height * garbage_scale)))
+    garbage_rect.size = garbage_img_scaled.get_size()
+    garbage_list.append(garbage_rect)
+
+
+
+
+
+
+# Set up the score font
+score_font = pygame.font.Font(None, 30)
+score = 0
+# At the start of the game
+level_font = pygame.font.Font(None, 30)
+level = 1
+
+# Set up the game loop
+running = True
+while running:
+
+
+
+
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Handle input
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player_rect.x -= player_speed
+    if keys[pygame.K_RIGHT]:
+        player_rect.x += player_speed
+    if keys[pygame.K_UP]:
+        player_rect.y -= player_speed
+    if keys[pygame.K_DOWN]:
+        player_rect.y += player_speed
+
+
+    # Handle enemy movement
+    if enemy_rect.colliderect(player_rect):
+        score -= 1
+        if score < 0:
+            score = 0
+
+    elif enemy_rect.x < player_rect.x:
+        enemy_rect.move_ip(enemy_speed, 0)
+    elif enemy_rect.x > player_rect.x:
+        enemy_rect.move_ip(-enemy_speed, 0)
+    if enemy_rect.y < player_rect.y:
+        enemy_rect.move_ip(0, enemy_speed)
+    elif enemy_rect.y > player_rect.y:
+        enemy_rect.move_ip(0, -enemy_speed)
+
+
+    # Handle boundary checking
+    if player_rect.left < 0:
+        player_rect.left = 0
+    if player_rect.right > win_width:
+        player_rect.right = win_width
+    if player_rect.top < 0:
+        player_rect.top = 0
+    if player_rect.bottom > win_height:
+        player_rect.bottom = win_height
+    if enemy_rect.left < 0:
+        enemy_rect.left = 0
+    if enemy_rect.right > win_width:
+        enemy_rect.right = win_width
+    if enemy_rect.top < 0:
+        enemy_rect.top = 0
+    if enemy_rect.bottom > win_height:
+        enemy_rect.bottom = win_height
+
+
+
+
+    # Check for collisions between player and garbage
+    for garbage_rect in garbage_list:
+        if player_rect.colliderect(garbage_rect):
+            garbage_rect.center = (random.randint(0, win_width), random.randint(0, win_height))
+            score += 1
+
+    # Inside the game loop, after updating the score
+    if score // 5 >= level:
+        level += 1
+
+    # Define screen color based on level
+    if level == 1:
+        SCREEN_COLOR = (100, 149, 237)  # Cornflower blue
+    elif level == 2:
+        SCREEN_COLOR = (135, 206, 235)  # Sky blue
+    elif level == 3:
+        SCREEN_COLOR = (173, 216, 230)  # Light blue
+    else:
+        SCREEN_COLOR = (100, 149, 237)  # Default to Cornflower blue
+
+    # Draw the background
+    win.fill((0, 0, 255))
+
+    # Draw the garbage
+    for garbage_rect in garbage_list:
+        win.blit(garbage_img_scaled, garbage_rect)
+
+    # Draw the enemy
+    win.blit(enemy_img_scaled, enemy_rect)
+
+    # Draw the player
+    win.blit(player_img_scaled, player_rect)
+
+    # Draw the score
+    score_text = score_font.render(f"Score: {score}", True, (255, 255, 255))
+    win.blit(score_text, (win_width - score_text.get_width() - 10,10))
+    level_text = level_font.render(f"Level {level}", True, (255, 255, 255))
+    win.blit(level_text, (win_width - level_text.get_width() - 925, 10))
+    pygame.display.update()
+
+
+
+
+
+# Quit Pygame
+pygame.quit()
